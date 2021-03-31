@@ -221,18 +221,23 @@ export default class QRCodeScanner extends Component {
   }
 
   _handleBarCodeRead(e) {
+    // console.log(e)
     if (!this.state.scanning && !this.state.disableVibrationByUser) {
-      if (this.props.vibrate) {
-        Vibration.vibrate();
+      if (e.barcodes && e.barcodes.length > 0){
+        // console.log('bingo')
+        if (this.props.vibrate) {
+          Vibration.vibrate();
+        }
+        this._setScanning(true);
+        this.props.onRead(e);
+        if (this.props.reactivate) {
+          this._scannerTimeout = setTimeout(
+              () => this._setScanning(false),
+              this.props.reactivateTimeout
+          );
+        }
       }
-      this._setScanning(true);
-      this.props.onRead(e);
-      if (this.props.reactivate) {
-        this._scannerTimeout = setTimeout(
-          () => this._setScanning(false),
-          this.props.reactivateTimeout
-        );
-      }
+
     }
   }
 
@@ -271,6 +276,8 @@ export default class QRCodeScanner extends Component {
   }
 
   _renderCameraComponent() {
+
+    console.log(Camera.Constants.GoogleVisionBarcodeDetection.BarcodeType.QR_CODE)
     return (
       <Camera
         androidCameraPermissionOptions={{
@@ -279,10 +286,12 @@ export default class QRCodeScanner extends Component {
           buttonPositive: this.props.buttonPositive,
         }}
         style={[styles.camera, this.props.cameraStyle]}
-        onBarCodeRead={this._handleBarCodeRead.bind(this)}
+        onGoogleVisionBarcodesDetected={this._handleBarCodeRead.bind(this)}
+        googleVisionBarcodeType={Camera.Constants.GoogleVisionBarcodeDetection.BarcodeType.QR_CODE}
         type={this.props.cameraType}
         flashMode={this.props.flashMode}
         captureAudio={false}
+        useNativeZoom={true}
         {...this.props.cameraProps}
       >
         {this._renderCameraMarker()}
